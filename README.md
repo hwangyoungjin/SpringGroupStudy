@@ -2,8 +2,9 @@
 ---
 
 ### 목차
-1. 1주차 : [간단한 API서버 만들기](https://github.com/hwangyoungjin/Spring-Web-MVC/tree/master/spring-group-study/README.md#1주차)
-2. 2주차 : [스프링부트 AutoConfiguration](https://github.com/hwangyoungjin/Spring-Web-MVC/tree/master/spring-group-study/README.md#2주차)
+1. 1주차 : [간단한 API서버 만들기](https://github.com/hwangyoungjin/SpringGroupStudy#1주차)
+2. 2주차 : [스프링부트 AutoConfiguration](https://github.com/hwangyoungjin/SpringGroupStudy#2주차)
+3. 3주차 : [예외 처리, 스프링 부트 테스트 코드 작성](https://github.com/hwangyoungjin/SpringGroupStudy#3주차)
 
 ## 1주차
 ### [간단한 API서버 만들기](https://brunch.co.kr/@springboot/531)
@@ -390,5 +391,9 @@
 		```java
 		server.tomcat.threads.max=200 // application.properties에서 변경
 		```
-	2. naver open API를 통해 영화검색서비스 응답 데이터 필드 모두 추가 + 평점이 0인 데이터는 제외하기
-	3. naver open API를 통해 영화 외 다른 검색서비스 추가
+	2. naver open API를 통해 영화 외 다른 검색서비스 추가
+
+## 3주차
+### [예외 처리, 스프링 부트 테스트 코드 작성하기](https://brunch.co.kr/@springboot/538)
+---
+1.
