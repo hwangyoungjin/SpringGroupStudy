@@ -519,7 +519,11 @@
 		9. ##### **http://localhost:8080/api/v1/search/shops?s=바지**로 결과 확인
 		- <img src="https://user-images.githubusercontent.com/60174144/105951229-0c7f1680-60b3-11eb-88c4-2b2e2e6a7a50.png" width="50%" height="50%">
 
+
+3. ### 2주차 PR요청
+
 ## 3주차
 ### [예외 처리, 스프링 부트 테스트 코드 작성하기](https://brunch.co.kr/@springboot/538)
 ---
 1. 
+2. 과제
