@@ -26,7 +26,7 @@ public class MovieRepositoryImpl implements MovieRepository {
         this.naverProperties = naverProperties;
     }
 
-    @Override
+    @Override //naver api 결과 받아오기
     public List<Movie> findByQuery(String query) {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("X-Naver-Client-Id",naverProperties.getClientId());

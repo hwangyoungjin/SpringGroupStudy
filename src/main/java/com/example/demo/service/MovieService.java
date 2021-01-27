@@ -19,7 +19,6 @@ public class MovieService {
         this.movieRepository = movieRepository;
     }
 
-
     public List<Movie> search(final String query){
         MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
         return movieGroup.getListOrderRating();

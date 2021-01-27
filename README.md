@@ -391,9 +391,135 @@
 		```java
 		server.tomcat.threads.max=200 // application.properties에서 변경
 		```
-	2. naver open API를 통해 영화 외 다른 검색서비스 추가
+	2. #### naver open API를 통해 쇼핑 검색서비스 추가하기
+		- [Naver 쇼핑 API 정보](https://developers.naver.com/docs/search/shopping/)
+		- PostMan으로 헤더에 인증값 넣고 naver open api 요청보내서 응답 결과 확인해보기
+		- <img src="https://user-images.githubusercontent.com/60174144/105951107-e3f71c80-60b2-11eb-9018-0be15eff6527.png" width="50%" height="50%">
+		
+		1. ##### application.properties에 json형식의 요청 url 추가
+		```java
+		naver.openapi.shopUrl=https://openapi.naver.com/v1/search/shop.json
+		```
+
+		2. ##### NaverProperties에 shopUrl 추가
+		```java
+		Getter
+		@Setter
+		@Configuration
+		@ConfigurationProperties(prefix = "naver.openapi")
+		public class NaverProperties {
+		    private String movieUrl;
+		    private String shopUrl;
+		    private String clientId;
+		    private String clientSecret;
+		}
+		```
+
+		3. ##### 네이버 오픈 api의 Shop 결과를 받아 바인딩할 ResponseShop 객체 정의
+		```java
+		@Getter
+		@Setter
+		@AllArgsConstructor
+		@NoArgsConstructor
+		public class ResponseShop {
+		    private List<Item> items;
+		
+		    @Getter
+		    @Setter
+		    @AllArgsConstructor
+		    @NoArgsConstructor
+		    public static class Item{
+		        private String title;
+		        private String link;
+		        private String image;
+		        private Long iprice; //최저가
+		        private Long hprice; //최고가
+		        private Long productId; //상품 id
+		    }
+		}
+		```
+
+		4. ##### 서버에서 활용할 Shop model 만들기
+		```java
+		@Builder
+		@Getter
+		@Setter
+		public class Shop {
+		    private String title;
+		    private String link;
+		    private String image;
+		    private Long iprice; //최저가
+		    private Long hprice; //최고가
+		    private Long productId; //상품 id
+		}
+		``` 
+
+		5. ##### ShopRepository 추가
+		```java
+		@Repository
+		public interface ShopRepository {
+		    List<Shop> findByQuery(String query);
+		}
+		```
+		
+		6. ##### ShopRepository 구현 : ShopRepositoryImpl
+		```java
+		@Component
+		public class ShopRepositoryImpl implements ShopRepository {
+		
+		    @Autowired
+		    RestTemplate restTemplate;
+		
+		    @Autowired
+		    NaverProperties naverProperties;
+		
+		    @Override
+		    public List<Shop> findByQuery(String query) {
+		        HttpHeaders httpHeaders = new HttpHeaders();
+		        httpHeaders.add("X-Naver-Client-Id",naverProperties.getClientId());
+		        httpHeaders.add("X-Naver-Client-Secret",naverProperties.getClientSecret());
+		
+		        String url = naverProperties.getShopUrl()+"?query="+query;
+		        return restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(httpHeaders), ResponseShop.class)
+		                .getBody() //ResponseShop 객체로 요청 결과 (응답) 바인딩됨
+		                .getItems()//ResponseShop의 item
+		                .stream()
+		                .map(m->Shop.builder() //item의 데이터를 Shop 객체로 바인딩하기
+		                .title(m.getTitle())
+		                .link(m.getLink())
+		                .image(m.getImage())
+		                .iprice(m.getIprice())
+		                .hprice(m.getHprice())
+		                .productId(m.getProductId())
+		                .build())
+		                .collect(Collectors.toList()); //List<Shop> 으로 return
+		    }
+		}
+		```
+
+		7. ##### Repository를 통해 가져온 데이터 활용할 ShopService 구현
+		```java
+		@Service
+		public class ShopService {
+		    @Autowired
+		    ShopRepository shopRepository;
+		    public List<Shop> search(final String query){
+		        return shopRepository.findByQuery(query);
+		    }
+		}
+		```
+		8. ##### 기존 SearchController에 응답 받을 shop url 추가
+		```java
+		@GetMapping("/shops")
+		public List<Shop> getShopsByQuery(@RequestParam(name = "s") String query){
+		    return shopService.search(query);
+		}
+		```
+		
+		9. ##### **http://localhost:8080/api/v1/search/shops?s=바지**로 결과 확인
+		- <img src="https://user-images.githubusercontent.com/60174144/105951229-0c7f1680-60b3-11eb-88c4-2b2e2e6a7a50.png" width="50%" height="50%">
 
 ## 3주차
 ### [예외 처리, 스프링 부트 테스트 코드 작성하기](https://brunch.co.kr/@springboot/538)
 ---
-1.
+1. 
