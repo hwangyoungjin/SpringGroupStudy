@@ -35,3 +35,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+
+SpringGroupStudy/blob/main/src/main/resources/application-secret.properties
