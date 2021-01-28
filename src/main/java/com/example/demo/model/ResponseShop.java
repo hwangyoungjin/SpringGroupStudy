@@ -22,7 +22,7 @@ public class ResponseShop {
         private String title;
         private String link;
         private String image;
-        private Long iprice; //최저가
+        private Long lprice; //최저가
         private Long hprice; //최고가
         private Long productId; //상품 id
     }

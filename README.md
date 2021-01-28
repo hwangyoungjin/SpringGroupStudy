@@ -519,8 +519,50 @@
 		9. ##### **http://localhost:8080/api/v1/search/shops?s=바지**로 결과 확인
 		- <img src="https://user-images.githubusercontent.com/60174144/105951229-0c7f1680-60b3-11eb-88c4-2b2e2e6a7a50.png" width="50%" height="50%">
 
+		10. ##### 최저가로 정렬되어 출력되로록 코드 수정
+		```java
+		- 최저가 출력 변수 lprice인데 iprice으로 실행되어 null 값 나오고 이었음
+		```
+			1. Shop model 코드 추가
+			```java
+			@Builder
+			@Getter
+			@Setter
+			public class Shop implements Comparable<Shop> {
+			    private String title;
+			    private String link;
+			    private String image;
+			    private Long lprice; //최저가
+			    private Long hprice; //최고가
+			    private Long productId; //상품 id
+    
+			    //기준정렬 만들기 - 최저가 오름차순
+			    @Override
+			    public int compareTo(Shop o) {
+			        return this.lprice > o.lprice ? 1 : -1;
+			    }
+			```
+			2. ShopService 코드 추가
+			```java
+			    //이름정렬
+			    public List<Shop> getOrderName(String query){
+			        List<Shop> shops = shopRepository.findByQuery(query);
+			        return shops.stream().filter(a->!a.getLprice().equals(0)).sorted().collect(Collectors.toList());
+			    }
+			```
+			3. SearchController 코드 수정
+			```java
+			    @GetMapping("/shops")
+			    public List<Shop> getShopsByQuery(@RequestParam(name = "s") String query){
+			        //return shopService.search(query);
+			        //이름정렬
+			        return shopService.getOrderName(query);
+			    }
+			```
+			4. 결과
+			- <img src="https://user-images.githubusercontent.com/60174144/106151206-74bb1e80-61bf-11eb-86a8-50bfea8e3ebd.png" width="50%" height="50%">
 
-3. ### 2주차 PR요청
+3. ### 2주차 PR요청 완료
 
 ## 3주차
 ### [예외 처리, 스프링 부트 테스트 코드 작성하기](https://brunch.co.kr/@springboot/538)

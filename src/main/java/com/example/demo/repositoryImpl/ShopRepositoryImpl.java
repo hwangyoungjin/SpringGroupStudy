@@ -38,7 +38,7 @@ public class ShopRepositoryImpl implements ShopRepository {
                 .title(m.getTitle())
                 .link(m.getLink())
                 .image(m.getImage())
-                .iprice(m.getIprice())
+                .lprice(m.getLprice())
                 .hprice(m.getHprice())
                 .productId(m.getProductId())
                 .build())

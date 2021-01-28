@@ -27,6 +27,8 @@ public class SearchController {
 
     @GetMapping("/shops")
     public List<Shop> getShopsByQuery(@RequestParam(name = "s") String query){
-        return shopService.search(query);
+        //return shopService.search(query);
+        //이름정렬
+        return shopService.getOrderName(query);
     }
 }
