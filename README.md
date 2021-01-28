@@ -520,9 +520,10 @@
 		- <img src="https://user-images.githubusercontent.com/60174144/105951229-0c7f1680-60b3-11eb-88c4-2b2e2e6a7a50.png" width="50%" height="50%">
 
 		10. ##### 최저가로 정렬되어 출력되로록 코드 수정
-		```java
-		- 최저가 출력 변수 lprice인데 iprice으로 실행되어 null 값 나오고 이었음
-		```
+			```java
+			- 최저가 출력 변수 lprice인데 iprice으로 실행되어 null 값 나오고 이었음
+			- 해결
+			```
 			1. Shop model 코드 추가
 			```java
 			@Builder
