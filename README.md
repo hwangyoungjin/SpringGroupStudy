@@ -570,11 +570,17 @@
 ---
 1. ### 스프링 테스트 [단위 테스트 vs 통합 테스트]
 	0. ### 순서
-	```java
-	1. given : 테스트 준비 : 어떤 상황을 준다
-	2. when : 테스트 시작 : 어떤 일을 발생시킨다
-	3, then : 테스트 단언 : 결과가 맞는지 check (assert 이용)
-	```
+		- 시작은 test 의존성추가
+		```java
+		spring-boot-starter-test
+		scope는 test
+		```
+		- Test 코드 순서
+		```java
+		1. given : 테스트 준비 : 어떤 상황을 준다
+		2. when : 테스트 시작 : 어떤 일을 발생시킨다
+		3, then : 테스트 단언 : 결과가 맞는지 check (assert 이용)
+		```
 	1. #### 단위테스트 [아직 완벽히 이해x]
 		1. ##### 단위테스트의 5가지 원칙
 		```java
@@ -585,28 +591,23 @@
 		T - Timely ( 바로 사용 가능해야 한다. )
 		```
 	2. #### 통합테스트
-		1. 시작은 test 의존성추가
-		```java
-		spring-boot-starter-test
-		scope는 test
-		```
-		2. @SpringBootTest
+		1. @SpringBootTest
 		```java
 		- 해당 어노테이션에 의해 ComponentScan이 동작하여 모든 어플리케이션의 Bean을 등록
 		- 애플리케이션 실행하는 것과 같게 동작
 		```
-		3. @SpringBootTest(MovieService.class)
+		2. @SpringBootTest(MovieService.class)
 		```java
 		- MovieService만 필요한 테스트 이므로 해당 클래스와 관련된 Bean만 스프링 컨테이너에 등록된다.
 		- 불필요한 bean등록을 피해 테스트 속도를 높힌다.
 		```
-		4. @MockBean
+		3. @MockBean
 		```java
 		- 임시객체인 Mock객체를 편하게 사용할 수 있도록 제공
 		- ApplicationContext 에 들어있는 Bean을 해당 Mock 객체로 교체한다.
 		- 모든 @Test마다 자동으로 리셋된다
 		```
-		5. **Mockito, BDDMockito 공부 필요**
+		4. **Mockito, BDDMockito 공부 필요**
 		5. Test Code
 		```java
 		@SpringBootTest(classes = MovieService.class)
@@ -643,5 +644,77 @@
 		    }
 		}
 		```
+	
+2. ### 과제
+	1. #### 영화 검색 서비스 캐싱 역할 만들기
+		```java
+		1. 사용자에 의한 키워드 검색 시 네이버 Open API 영화 검색 결과를 애플리케이션 내부에 정의한 자료구조로 저장해 놓기
+		  - Map을 사용해서 key에는 검색어, Value에는 검색 결과를 저장
+		2. 사용자에 의한 키워드 검색 시 특정 키워드에 해당하는 데이터가 자료구조에 이미 저장되어 있다면, 네이버 오픈 API를 호출하지 않고,
+		저장된(캐싱된) 데이터를 사용하도록 없으면 네이버 Open API 호출
+		3. 관리자에 의한 캐시 데이터를 강제로 업데이트(갱신)하는 RestController API 만들기
+		  - RestAPI의 갱신해주는 API를 호출하면, 네이버 오픈 API를 호출 후 캐시에 저장
+		```
+
+		1. ##### MovieService 코드 수정
+		```java
+		@Service
+		public class MovieService {
+
+		    //캐싱용으로 사용 할 자료구조
+		    static HashMap<String, List<Movie>> hm = new HashMap<>();
 		
-2. 과제
+		    @Autowired
+		    MovieRepository movieRepository;
+		
+		    public MovieService(MovieRepository movieRepository){
+		        this.movieRepository = movieRepository;
+		    }
+
+		    public List<Movie> search(final String query){
+		        List<Movie> movies = null;
+		        if(hm.containsKey(query)){ // 자료구조에 있는지 검색
+		            //있다면 받아오기
+		            movies = hm.get(query);
+		            //System.out.println(query+"결과 캐시에서 가져옴");
+		        }
+		        else{ //없으면 네이버 Open API 호출
+		            MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
+		            movies = movieGroup.getListOrderRating();
+		            hm.put(query,movies);
+		            //System.out.println(query+"결과 네이버 OpenAPI 에서 가져옴");
+		        }
+		        return movies;
+		    }
+		```
+		2. ##### 관리자 요청받을 컨트롤러 생성
+		| Methods | Urls | Actions |
+		|---|:---:|:---:|
+		| GET | /cache/movies/{query} | query에 해당하는 영화 캐시 데이터 Update 후 데이터 반환 |
+		```java		
+		@RestController
+		@RequestMapping("/cache")
+		public class CacheAPIController {
+		
+		    @Autowired
+		    MovieService movieService;
+
+		    //url 패턴으로 받기		
+		    @GetMapping("/movies/{query}")
+		    public List<Movie> movieDataUpdate(@PathVariable String query){
+		        return movieService.cacheUpdate(query);
+		    }
+		}
+		```
+		3. #### MovieService에 관리자 Update 내용 추가
+		```java
+		    //관리자 강제 Update용
+		    public List<Movie> cacheUpdate(final String query) {
+		        MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
+		        List<Movie> movies = movieGroup.getListOrderRating();
+		        hm.put(query, movies);
+		        //System.out.println(query+" 결과 Update");
+		        return movies;
+		    }
+		```
+		
