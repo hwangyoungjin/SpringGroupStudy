@@ -568,5 +568,80 @@
 ## 3주차
 ### [예외 처리, 스프링 부트 테스트 코드 작성하기](https://brunch.co.kr/@springboot/538)
 ---
-1. 
+1. ### 스프링 테스트 [단위 테스트 vs 통합 테스트]
+	0. ### 순서
+	```java
+	1. given : 테스트 준비 : 어떤 상황을 준다
+	2. when : 테스트 시작 : 어떤 일을 발생시킨다
+	3, then : 테스트 단언 : 결과가 맞는지 check (assert 이용)
+	```
+	1. #### 단위테스트 [아직 완벽히 이해x]
+		1. ##### 단위테스트의 5가지 원칙
+		```java
+		F - Fast ( 테스트 코드를 실행하는 일은 오래 걸리면 안된다.)
+		I - Indenpendent ( 독립적으로 실행이 되어야 한다)
+		R - Repeatable ( 반복 가능해야 한다)
+		S - Self Validating ( 메뉴얼 없이 테스트 코드만 실행해도 성공, 실패 여부를 알 수 있어야 한다.)
+		T - Timely ( 바로 사용 가능해야 한다. )
+		```
+	2. #### 통합테스트
+		1. 시작은 test 의존성추가
+		```java
+		spring-boot-starter-test
+		scope는 test
+		```
+		2. @SpringBootTest
+		```java
+		- 해당 어노테이션에 의해 ComponentScan이 동작하여 모든 어플리케이션의 Bean을 등록
+		- 애플리케이션 실행하는 것과 같게 동작
+		```
+		3. @SpringBootTest(MovieService.class)
+		```java
+		- MovieService만 필요한 테스트 이므로 해당 클래스와 관련된 Bean만 스프링 컨테이너에 등록된다.
+		- 불필요한 bean등록을 피해 테스트 속도를 높힌다.
+		```
+		4. @MockBean
+		```java
+		- 임시객체인 Mock객체를 편하게 사용할 수 있도록 제공
+		- ApplicationContext 에 들어있는 Bean을 해당 Mock 객체로 교체한다.
+		- 모든 @Test마다 자동으로 리셋된다
+		```
+		5. **Mockito, BDDMockito 공부 필요**
+		5. Test Code
+		```java
+		@SpringBootTest(classes = MovieService.class)
+		class MovieServiceTest {
+
+		    @Autowired
+		    private MovieService movieService;
+
+		    @MockBean
+		    private MovieRepository movieRepository;
+
+		    @DisplayName("평점 순으로 정렬되는지 검사")
+		    @Test
+		    void shouldSortedInOrderOfGrade(){
+		        //given
+		        String query = "테스트";
+		        String expectedTopRankingMovieTitle = "평점1위";
+		        given(movieRepository.findByQuery(anyString())).willReturn(this.getStubMovies());
+		
+		        //when
+		        List<Movie> movies = movieService.search(query);
+		
+		        //then
+		        Assertions.assertEquals(movies.stream().findFirst().get().getTitle(),expectedTopRankingMovieTitle);
+		    }
+		
+		    List<Movie> getStubMovies(){
+		        return Arrays.asList(
+		                Movie.builder().title("평점0").link("http://test").userRating(0.0f).build(),
+		                Movie.builder().title("평점2위").link("http://test").userRating(9.3f).build(),
+		                Movie.builder().title("평점3위").link("http://test").userRating(8.7f).build(),
+		                Movie.builder().title("평점1위").link("http://test").userRating(9.7f).build()
+		                );
+		    }
+		}
+		```
+		
 2. 과제

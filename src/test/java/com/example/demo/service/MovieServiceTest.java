@@ -7,42 +7,51 @@ import com.example.demo.repositoryImpl.MovieRepositoryImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.web.client.RestTemplate;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
 
+@SpringBootTest(classes = MovieService.class)
 class MovieServiceTest {
-    //첫 번째 테스트 방법 Mock클래스 직접 생성
-    class MockMovieRepositoryImpl extends MovieRepositoryImpl{
 
-         public MockMovieRepositoryImpl(RestTemplate restTemplate, NaverProperties naverProperties){
-             super(restTemplate,naverProperties);
-         }
+    @Autowired
+    private MovieService movieService;
 
-        @Override //가짜데이터를 반환
-        public List<Movie> findByQuery(String query) {
-            return Arrays.asList(
-                    Movie.builder().title("영화1").link("http://test").userRating(9.3f).build(),
-                    Movie.builder().title("영화2").link("http://test").userRating(8.7f).build(),
-                    Movie.builder().title("영화3").link("http://test").userRating(9.7f).build()
-            );
-        }
-    }
+    @MockBean
+    private MovieRepository movieRepository;
 
     @DisplayName("평점 순으로 정렬되는지 검사")
     @Test
     void shouldSortedInOrderOfGrade(){
         //given
-        String query = "테스트_쿼리";
-        String expectedTopRankingMovieTitle = "영화3";
-        MovieRepository movieRepository = new MockMovieRepositoryImpl(null,null);
-        MovieService movieService = new MovieService(movieRepository);
+        String query = "테스트";
+        String expectedTopRankingMovieTitle = "평점1위";
+        given(movieRepository.findByQuery(anyString())).willReturn(this.getStubMovies());
 
         //when
-        List<Movie> movieList = movieService.search(query);
+        List<Movie> movies = movieService.search(query);
 
         //then
-        Assertions.assertEquals(expectedTopRankingMovieTitle, movieList.stream().findFirst().get().getTitle());
+        Assertions.assertEquals(movies.stream().findFirst().get().getTitle(),expectedTopRankingMovieTitle);
+    }
+
+    List<Movie> getStubMovies(){
+        return Arrays.asList(
+                Movie.builder().title("평점0").link("http://test").userRating(0.0f).build(),
+                Movie.builder().title("평점2위").link("http://test").userRating(9.3f).build(),
+                Movie.builder().title("평점3위").link("http://test").userRating(8.7f).build(),
+                Movie.builder().title("평점1위").link("http://test").userRating(9.7f).build()
+                );
     }
 }
