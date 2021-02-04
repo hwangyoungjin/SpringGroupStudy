@@ -5,6 +5,7 @@
 1. 1주차 : [간단한 API서버 만들기](https://github.com/hwangyoungjin/SpringGroupStudy#1주차)
 2. 2주차 : [스프링부트 AutoConfiguration](https://github.com/hwangyoungjin/SpringGroupStudy#2주차)
 3. 3주차 : [예외 처리, 스프링 부트 테스트 코드 작성](https://github.com/hwangyoungjin/SpringGroupStudy#3주차)
+4. 4주차 : [AOP와 스프링캐시 추상화, Redis 연동](https://github.com/hwangyoungjin/SpringGroupStudy#4주차)
 
 ## 1주차
 ### [간단한 API서버 만들기](https://brunch.co.kr/@springboot/531)
@@ -718,3 +719,6 @@
 		    }
 		```
 		
+## 4주차
+
+
