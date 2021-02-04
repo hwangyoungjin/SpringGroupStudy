@@ -1,6 +1,7 @@
 package com.example.demo.repositoryImpl;
 
 import com.example.demo.config.NaverProperties;
+import com.example.demo.model.Movie;
 import com.example.demo.model.ResponseShop;
 import com.example.demo.model.Shop;
 import com.example.demo.repository.ShopRepository;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
