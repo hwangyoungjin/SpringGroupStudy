@@ -8,6 +8,7 @@ import org.aspectj.lang.reflect.CodeSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.swing.text.html.Option;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -30,21 +31,14 @@ public class CachingAspectProvider {
             return joinPoint.proceed();
         }
 
-
         String cacheName = target.value(); //파라미터로 받은 target
         String cacheKey = getKey(joinPoint, target); // taget의 key에 대한 값을 가져온다.
-
-        System.out.println("==========Cache 실행됨=========");
-        System.out.println("targat 파라미터의 key = "+ target.key());
-        System.out.println("targat 파라미터의 value = "+ cacheName);
-        System.out.println("target 파라미너 key에 대한 값"+ cacheKey);
-
-
 
         return findInCaches(cacheName, cacheKey)
                 .orElseGet(() -> {
                     try {
-                        Object data = joinPoint.proceed();
+                        Object data = joinPoint.proceed(); // 조인포인트 실행
+                        //cacheName에 해당하는 key값과 data를 저장
                         putInCache(cacheName, cacheKey, data).thenAccept(isSave -> {
                             if(isSave) { log.info(""); }
                             else { log.error(""); }
@@ -72,7 +66,8 @@ public class CachingAspectProvider {
 
     private Optional<Object> findInCaches(final String name, final String key) {
         //name 해당하는 cache를 받아서 key에 해당하는 데이터를 Optional 타입으로 반환
-        return cacheManager.getChche(name).lookup(key);
+        Optional<Object> objectOptional = cacheManager.getChche(name).lookup(key);
+        return objectOptional;
     }
 
     private CompletableFuture<Boolean> putInCache(final String name, final String key, final Object data) {

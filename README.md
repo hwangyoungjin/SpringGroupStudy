@@ -838,27 +838,57 @@
 		- <img src="https://user-images.githubusercontent.com/60174144/106862344-564aab00-670a-11eb-9e47-af0c967ca8ca.png" width="50%" height="50%">
 
 
-2. ### AOP를 이용한 영화, 쇼핑 검색 데이터 캐싱하기
+2. ### AOP를 이용한 영화, 쇼핑 검색 데이터 캐싱 직접 구현하기
 	1. #### Concern	
 		- <img src="https://user-images.githubusercontent.com/60174144/107015991-bdd32a00-67e0-11eb-8d5b-1105e5a08757.png" width="50%" height="50%">
 
-	2. #### currentMap을 이용하여 cache와 CacheManager 구현하기(커스텀)
-		- <img src="https://user-images.githubusercontent.com/60174144/107018628-050eea00-67e4-11eb-8201-dd129aae1469.png" width="50%" height="50%">		
-
+	2. #### ConcurrentMap을 사용하여 메모리기반 저장소 cache와 CacheManager 구현하기(커스텀)
+		- <img src="https://user-images.githubusercontent.com/60174144/107031618-d0a42980-67f5-11eb-8ca1-0efdd6dd4c68.png" width="50%" height="50%">		
+	
 	3. #### Aspect에서 CustomCacheManager 사용하여 구현
-		- <img src="https://user-images.githubusercontent.com/60174144/107018800-3d162d00-67e4-11eb-9abc-e5b1d2475abc.png" width="50%" height="50%">
-
+		1. 애노테이션 정의
+		```java
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.METHOD)
+		public @interface LookAsideCaching {
+		     String value(); //cacheName
+		     String key() default "NONE"; //cacheKey
+		}
+		```		
+		2. [Aspect 정의 - 코드참조](https://github.com/hwangyoungjin/SpringGroupStudy/blob/main/src/main/java/com/example/demo/provider/cache/CachingAspectProvider.java)
+			- <img src="https://user-images.githubusercontent.com/60174144/107031800-22e54a80-67f6-11eb-9d4c-931255349f18.png" width="50%" height="50%">
+			- [joinPoint 메소드 사용참조](https://codedragon.tistory.com/9013)
+		3. Service에 애노테이션 사용
+		```java
+		    //value는 cacheName 
+		    @LookAsideCaching(value = "cache::search-movies",key = "query")
+		    public List<Movie> search(final String query){
+		        MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
+		        return movieGroup.getListOrderRating();
+		    }
+		```
 	4. #### PSA(Portable Service Abstraction)
 		- <img src="https://user-images.githubusercontent.com/60174144/107018896-5b7c2880-67e4-11eb-9687-8f10fdfa4a62.png" width="50%" height="50%">
 		
 
-3. ### [스프링에서 제공하는 캐시 추상화, Redis 연동](https://brunch.co.kr/@springboot/543)
-	1. #### 스프링부트에서 제공하는 캐시 사용하기
-		1. Step1. spring-boot-starter-cache 의존성 추가
+3. ### [스프링에서 제공하는 캐시 추상화](https://brunch.co.kr/@springboot/543)
+	1. #### 스프링에서 제공하는 캐시 스프링부트에서 사용하기
+		1. ##### Step1. spring-boot-starter-cache 의존성 추가
 		```java
 		org.springframwork.boot:spring-boot-starter-cache
+
+		* 의존성 추가시
+		 1. CacheManager를 빈으로 등록 ()
+		 2. Redis, EhCache등 에서 지원하는 캐시 라이브러리를 사용하지 않는경우 
+		    ConcurrentMapCacheManager를 제공하며 
+		    저장소로는 메모리를 기반으로 하여 ConcurrentHashMap를 사용
+		 3. ConcurrentMapCacheManager가 빈으로 등록된다. 
+		* 의존성 추가 후 Redis 의존성 까지 있는경우
+		 1. RedisCacheManager를 빈으로 등록
+		
+	
 		```
-		2. Step2. 캐시 기능을 사용하고 싶은 프로젝트에 @EnableCaching 추가
+		2. ##### Step2. 캐시 기능을 사용하고 싶은 프로젝트에 @EnableCaching 추가
 		```java
 		@SpringBootApplication
 		@EnableCaching
@@ -868,4 +898,45 @@
 		    }
 		}
 		```
+		3. ##### Step3. @Cacheable, @CacheEvict
+		```java
+		* 캐시하고 싶은 메서드에 @Cacheable 
+		* 캐시를 제거하고자하는 메서드에는 @CacheEvict를 쓴다. => 보통 remove나 delete 함수에 사용
 
+		@Service
+		public class MovieService {
+
+		    @Autowired
+		    MovieRepository movieRepository;
+
+		    public MovieService(MovieRepository movieRepository){
+		        this.movieRepository = movieRepository;
+		    }
+
+		    @Cacheable(value = "cache::movies::query") //cache::movies::query + 파라미터query값으로 key값 생성된다.
+		    public List<Movie> search(final String query){
+		        MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
+		        return movieGroup.getListOrderRating();
+		    }
+		```
+
+		
+4. ### Redis 연동
+	1. #### 의존성 추가하여 Redis 사용하기
+	```java
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	* 주로 캐시, 메시지브로커, 키-벨류 스토어등으로 사용
+
+	* Redis 연동시
+	 1) 스프링 데이터 Redis에는 RedisCacheManager를 제공
+	 2) RedisCacheManager는 RedisTemplate를 통해 Redis 서버를 가지고 동작
+
+	* Redis 주요 커맨드
+	 - keys * : 모든 key를 검색
+	 - get "key값" : key값에 해당하는 value를 검색
+
+	* 도커에서 Redis 실행시
+	 - docker run -p 6379:6379 --name redis_boot -d redis
+	 - docker exec -i -t redis_boot redid-cil
+	```

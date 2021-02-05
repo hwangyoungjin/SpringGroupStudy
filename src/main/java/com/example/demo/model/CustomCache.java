@@ -6,12 +6,12 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public class CurrentMapCustomCache {
+public class CustomCache {
 
     private final String name;
     private final ConcurrentMap<String, Object> store;
 
-    public CurrentMapCustomCache(String name, ConcurrentHashMap<String,Object> store){
+    public CustomCache(String name, ConcurrentHashMap<String,Object> store){
         this.name = name;
         this.store = store;
     }

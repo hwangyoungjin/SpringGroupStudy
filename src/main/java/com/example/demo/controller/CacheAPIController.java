@@ -21,9 +21,4 @@ public class CacheAPIController {
     public List<Movie> movieDataUpdate(@PathVariable String query){
         return movieService.cacheUpdate(query);
     }
-
-    @GetMapping("/movieaop/{query}")
-    public void aopTest(@PathVariable String query){
-        movieService.aopTest(query);
-    }
 }
