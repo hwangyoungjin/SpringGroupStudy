@@ -939,4 +939,14 @@
 	* 도커에서 Redis 실행시
 	 - docker run -p 6379:6379 --name redis_boot -d redis
 	 - docker exec -i -t redis_boot redid-cil
+
+	* redis포트가 6379라면 스프링 부트에서 따로 포트 설정 할 필요X
+	 - 포트번호가 6379가 아니고 3030이라면 application.properties 파일에 포트 설정
+	    # Redis Setting
+	    spring.cache.type=redis
+	    spring.redis.host=localhost
+	    spring.redis.port=3030
 	```
+	2. #### 프로젝트에 의존성만 추가하여 redis 적용
+	- <img src="https://user-images.githubusercontent.com/60174144/107064711-32c55480-681f-11eb-8c04-2f00ac1a2096.png" width="50%" height="50%">
+			
