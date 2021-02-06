@@ -928,6 +928,11 @@
 
 	* 주로 캐시, 메시지브로커, 키-벨류 스토어등으로 사용
 
+	* redis 사용의 장점
+	 1) ConcurrentMapCacheManager의 단점인 휘발성 메모리를 해결
+	 2) 서버간의 데이터 불일치 해결
+	 3) 스케일업 환경으로 애플리케이션의 메모리가 부족해지는 현상 해결
+
 	* Redis 연동시
 	 1) 스프링 데이터 Redis에는 RedisCacheManager를 제공
 	 2) RedisCacheManager는 RedisTemplate를 통해 Redis 서버를 가지고 동작
