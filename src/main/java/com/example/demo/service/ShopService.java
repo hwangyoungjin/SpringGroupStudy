@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Shop;
+import com.example.demo.provider.cache.LookAsideCaching;
 import com.example.demo.repository.ShopRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class ShopService {
     }
 
     //이름정렬
+    @LookAsideCaching(value = "cache::search-shops", key = "query")
     public List<Shop> getOrderName(String query){
         List<Shop> shops = shopRepository.findByQuery(query);
         return shops.stream().filter(a->!a.getLprice().equals(0)).sorted().collect(Collectors.toList());

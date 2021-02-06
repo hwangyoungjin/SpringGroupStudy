@@ -707,7 +707,7 @@
 		    }
 		}
 		```
-		3. #### MovieService에 관리자 Update 내용 추가
+		3. ##### MovieService에 관리자 Update 내용 추가
 		```java
 		    //관리자 강제 Update용
 		    public List<Movie> cacheUpdate(final String query) {
@@ -720,5 +720,238 @@
 		```
 		
 ## 4주차
+### AOP와 스프링캐시 추상화, Redis 연동 
+---
+1. ### [AOP](https://brunch.co.kr/@springboot/542)
+	```java
+	* AOP(Aspect-Oriented Programming)란
+	 - OOP를 보완하는 수단으로, 흩어진 Aspect를 모듈화 할 수 있는 프로그래밍 기법
+	 - 공통된 기능을 재사용하는 기법이다.
+	 - 스프링프레임워크의 (@RestController 등등의) 어노테이션 자체가 AOP 프레임워크이다.
+	
+	* AOP의 장점
+	 1. 어플리케이션 전체에 흩어진 공통기능 (Crosscutting Concerns)이 하나의 장소에서 관리 된다는 점
+	 2. 다른 서비스 모듈들이 본인의 목적에만 충실하고  그 외 사항들은 신경쓰지 않아도 된다는 점 
+
+	* AOP 주요개념 용어 (Spring에서만 사용되는것이 아닌 AOP 프레임워크 전체에서 사용되는 공용어)
+	 1. 타겟(Target)
+	    - 부가기능을 부여할 대상
+
+	 2. Aspect
+	    - 포인트컷과 어드바이스의 결합이다
+	    - 객체지향 모듈이 Object라 불리는 것과 같이 부가기능 모듈을 Aspect라고 부른다
+  
+	 3. 어드바이스(Advice)
+	    - 실질적으로 부가기능을 담은 구현체
+	    - 횡단 관심에 해당하는 공통 기능의 코드, 독립된 클래스의 메소드로 작성한다
+	    - 타겟 object에 종속되지 않아 순수하게 부가 기능에만 집중
+	    - Aspect가 무엇을, 언제 할지를 정의
+	    - 어드바이스 정의는 동작시점을 기준으로 5가지 있다.
+	        1) 메소드 실행 전 @Before 
+	        2) 메소드 실행 후 @After
+	        3) 메소드 정상적으로 실행 된 후 @AfterReturning
+	        4) 메소드 예외가 발생한 경우 @AfterThrowing 
+	        5) 메소드 호출 이전, 이후, 예외발생등 모든 시점에서 동작 @Around
+
+	4. PointCut
+	   - 부가기능이 적용될 대상(메소드)를 선정하는 방법
+	   - Advice를 적용할 JoinPoint를 선별하는 기능을 정의한 모듈을 말한다
+	   - PointCut 정의는 @Around안에서 정의하며
+	     표현식으로는 execution, @annotation, bean 3가지가 있다.
+	   - ||, &&, ! 을 사용하여 포인트컷 조합 가능하다.
+
+	5. JoinPoint
+	  - 클라이언트가 호출하는 모든 비즈니스 메소드, 조인포인트 중에서 포인트컷되기 때문에 
+	    포인트컷의 후보로 생각할 수 있다.
+	  - 다른 AOP 프레임워크와 달리 spring에서는 메소드 조인포인트만 제공
+
+	6. Proxy
+	  - Target을 감싸서 Target의 요청을 대신 받아주는 Wrapping Object
+	  - 클라이언트에서 타겟을 호출하게 되면 타겟이 아닌 타겟을 감싸고 있는 프록시가 호출되어, 
+	    타겟 메소드 실행전에 선처리, 타겟 메소드 실행 후, 후처리를 실행시키도록 구성
+	
+	* 스프링 AOP
+	 - 프록시 기반의 AOP 구현체
+	 - 스프링 빈에만 AOP 적용가능
+	 - 스프링 IoC와 연동하여 엔터프라이즈 애플리케이션에서 가장 흔한 문제에 대한 해결책을 제공하는것이 목적
+	 
+	* 애노테이션으로 포인트컷 정의해서 AOP 사용하기
+	 step 0. AOP의존성 추가
+	 step 1. 애노테이션 A 정의 (@Target, @Retention 사용)
+	 step 2. Aspect class (@Component, @Aspect 붙여서 정의) 만들고 메서드에 @Around(@annotation으로 포인트컷정의)를 통해 어드바이스 정의
+	 step 3. 함수에 해당 A 어노테이션 사용
+	 
+	```
+	
+	1. #### 메서드의 수행시간을 계산하는 간단한 AOP 구현하기
+		0. ##### 의존성 추가
+		```java
+		org.springframwork.boot:spring-boot-starter-aop
+		```
+		1. ##### Step1 애노테이션 정의
+		```java
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.METHOD)
+		public @interface PerformanceTimeRecord {
+		}
+		```
+		2. ##### Step2 Aspect class 정의
+		```java
+		@Slf4j
+		@Aspect
+		@Component
+		public class RecodeAspectProvider {
+		
+		    //PointCut = @Around에 정의한 애노테이션을 사용한 메소드에만 해당 코드가
+		    // 메소드 수행 전처리 후처리 사용된다
+		    @Around("@annotation(com.example.demo.provider.timePerformanceTimeRecord)")
+		    public Object logExcutionTime(ProceedingJoinPoint joinPoint) throws Throwable {
+		        System.out.println("time 체크 시작");
+		        long start = System.currentTimeMillis();
+
+		        //가장 중요한 구문으로 실제 애노테이션이 붙은 메소드의 내용이 실행된다.
+		        Object proceed = joinPoint.proceed();
+
+		        long executionTime = System.currentTimeMillis() - start;
+		        System.out.println("결과 시간 = " + executionTime);
+
+		        //@Slf4j로 log 사용
+		        log.info(joinPoint.getSignature()+ "executed in "+ executionTime + "ms");
+
+		        //반드시 proceed의 결과를 return 해주어야 한다.
+		        return proceed;
+		    }
+		}
+		```
+		3. ##### Step3 Service단 함수에 정의한 애노테이션 사용
+		```java
+		@Service
+		public class MovieService {
+
+		    @PerformanceTimeRecord
+		    public void aopTest(){
+		        System.out.println("AOP Test");
+		    }
+		}
+		```
+		4. ##### 결과
+		- <img src="https://user-images.githubusercontent.com/60174144/106862344-564aab00-670a-11eb-9e47-af0c967ca8ca.png" width="50%" height="50%">
 
 
+2. ### AOP를 이용한 영화, 쇼핑 검색 데이터 캐싱 직접 구현하기
+	1. #### Concern	
+		- <img src="https://user-images.githubusercontent.com/60174144/107015991-bdd32a00-67e0-11eb-8d5b-1105e5a08757.png" width="50%" height="50%">
+
+	2. #### ConcurrentMap을 사용하여 메모리기반 저장소 cache와 CacheManager 구현하기(커스텀)
+		- <img src="https://user-images.githubusercontent.com/60174144/107031618-d0a42980-67f5-11eb-8ca1-0efdd6dd4c68.png" width="50%" height="50%">		
+	
+	3. #### Aspect에서 CustomCacheManager 사용하여 구현
+		1. 애노테이션 정의
+		```java
+		@Retention(RetentionPolicy.RUNTIME)
+		@Target(ElementType.METHOD)
+		public @interface LookAsideCaching {
+		     String value(); //cacheName
+		     String key() default "NONE"; //cacheKey
+		}
+		```		
+		2. [Aspect 정의 - 코드참조](https://github.com/hwangyoungjin/SpringGroupStudy/blob/main/src/main/java/com/example/demo/provider/cache/CachingAspectProvider.java)
+			- <img src="https://user-images.githubusercontent.com/60174144/107031800-22e54a80-67f6-11eb-9d4c-931255349f18.png" width="50%" height="50%">
+			- [joinPoint 메소드 사용참조](https://codedragon.tistory.com/9013)
+		3. Service에 애노테이션 사용
+		```java
+		    //value는 cacheName 
+		    @LookAsideCaching(value = "cache::search-movies",key = "query")
+		    public List<Movie> search(final String query){
+		        MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
+		        return movieGroup.getListOrderRating();
+		    }
+		```
+	4. #### PSA(Portable Service Abstraction)
+		- <img src="https://user-images.githubusercontent.com/60174144/107018896-5b7c2880-67e4-11eb-9687-8f10fdfa4a62.png" width="50%" height="50%">
+		
+
+3. ### [스프링에서 제공하는 캐시 추상화](https://brunch.co.kr/@springboot/543)
+	1. #### 스프링에서 제공하는 캐시 스프링부트에서 사용하기
+		1. ##### Step1. spring-boot-starter-cache 의존성 추가
+		```java
+		org.springframwork.boot:spring-boot-starter-cache
+
+		* 의존성 추가시
+		 1. CacheManager를 빈으로 등록 ()
+		 2. Redis, EhCache등 에서 지원하는 캐시 라이브러리를 사용하지 않는경우 
+		    ConcurrentMapCacheManager를 제공하며 
+		    저장소로는 메모리를 기반으로 하여 ConcurrentHashMap를 사용
+		 3. ConcurrentMapCacheManager가 빈으로 등록된다. 
+		* 의존성 추가 후 Redis 의존성 까지 있는경우
+		 1. RedisCacheManager를 빈으로 등록
+		
+	
+		```
+		2. ##### Step2. 캐시 기능을 사용하고 싶은 프로젝트에 @EnableCaching 추가
+		```java
+		@SpringBootApplication
+		@EnableCaching
+		public class DemoApplication {
+		    public static void main(String[] args) {
+		        SpringApplication.run(DemoApplication.class, args);
+		    }
+		}
+		```
+		3. ##### Step3. @Cacheable, @CacheEvict
+		```java
+		* 캐시하고 싶은 메서드에 @Cacheable 
+		* 캐시를 제거하고자하는 메서드에는 @CacheEvict를 쓴다. => 보통 remove나 delete 함수에 사용
+
+		@Service
+		public class MovieService {
+
+		    @Autowired
+		    MovieRepository movieRepository;
+
+		    public MovieService(MovieRepository movieRepository){
+		        this.movieRepository = movieRepository;
+		    }
+
+		    @Cacheable(value = "cache::movies::query") //cache::movies::query + 파라미터query값으로 key값 생성된다.
+		    public List<Movie> search(final String query){
+		        MovieGroup movieGroup = new MovieGroup(movieRepository.findByQuery(query));
+		        return movieGroup.getListOrderRating();
+		    }
+		```
+
+		
+4. ### Redis 연동
+	1. #### 의존성 추가하여 Redis 사용하기
+	```java
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	* 주로 캐시, 메시지브로커, 키-벨류 스토어등으로 사용
+
+	* redis 사용의 장점
+	 1) ConcurrentMapCacheManager의 단점인 휘발성 메모리를 해결
+	 2) 서버간의 데이터 불일치 해결
+	 3) 스케일업 환경으로 애플리케이션의 메모리가 부족해지는 현상 해결
+
+	* Redis 연동시
+	 1) 스프링 데이터 Redis에는 RedisCacheManager를 제공
+	 2) RedisCacheManager는 RedisTemplate를 통해 Redis 서버를 가지고 동작
+
+	* Redis 주요 커맨드
+	 - keys * : 모든 key를 검색
+	 - get "key값" : key값에 해당하는 value를 검색
+
+	* 도커에서 Redis 실행시
+	 - docker run -p 6379:6379 --name redis_boot -d redis
+	 - docker exec -i -t redis_boot redid-cil
+
+	* redis포트가 6379라면 스프링 부트에서 따로 포트 설정 할 필요X
+	 - 포트번호가 6379가 아니고 3030이라면 application.properties 파일에 포트 설정
+	    # Redis Setting
+	    spring.cache.type=redis
+	    spring.redis.host=localhost
+	    spring.redis.port=3030
+	```
+	2. #### 프로젝트에 의존성만 추가하여 redis 적용
+	- <img src="https://user-images.githubusercontent.com/60174144/107064711-32c55480-681f-11eb-8c04-2f00ac1a2096.png" width="50%" height="50%">
+			
