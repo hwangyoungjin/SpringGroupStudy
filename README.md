@@ -118,6 +118,9 @@
 	``` 
 
 	1. #### **restTemplate 사용**
+		```java
+		* 다른 서버의 API endpoint를 호출할 때 RestTemplate을 많이 쓴다.
+		```
 		- RestClicent 사용하기 위해 의존성 추가
 		```java
 		implementation 'org.apache.httpcomponents:httpclient:4.5'
