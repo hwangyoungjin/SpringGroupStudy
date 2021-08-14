@@ -18,7 +18,8 @@
     - @Service : 웹 내부에서 서비스를 처리하는 클래스에 사용하여 Bean으로 등록
     - @Controller : 웹요청과 응답을 처리하는 클래스에 사용하여 Bean으로 등록
     - @Configuration : 스프링 IoC Container에게 해당 클래스가 Bean구성 class임을 알려주는 어노테이션
-        
+  * @RequiredArgsConstructor 어노테이션은 초기화 되지않은 final 필드나, @NonNull 이 붙은 필드에 대해 생성자를 생성해 줍니다. 주로 의존성 주입(Dependency Injection) 편의성을 위해서 사용되곤 합니다.
+  
   * 외부설정
     - @ConfigurationProperties : 자바 Bean 스펙을 따라서 *.properties , *.yml 파일에 있는 값을 해당 어노테이션 붙은 클래스에 Getter, Setter를 이용하여 필드값의 바인딩 해준다.
 	1. 사용하기 위해선 configuration-processor 의존성 추가필요
