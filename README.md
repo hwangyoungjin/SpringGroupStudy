@@ -149,6 +149,11 @@
 	2. #### **Active Profiles**
 		- Naver OpenAPI를 호출하기 위해 필요한 정보
 		- resource 안 application-sercre.properties에 추가 (**git.ignore**)
+		- 기존에 있던 application.properties에 추가[참고](http://honeymon.io/tech/2021/01/16/spring-boot-config-data-migration.html)
+		```properties
+		#profile
+		spring.profiles.include=secret
+		```
 	3. #### **Config 설정**
 		- naver api를 사용하기 위하여 prefix를 naver.openapi로 설정
 		```java
